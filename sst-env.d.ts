@@ -5,6 +5,10 @@ import "sst"
 export {}
 declare module "sst" {
   export interface Resource {
+    "GoogleCalServiceAccJson": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "MyService": {
       "service": string
       "type": "sst.aws.Service"

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
+
+
 export default function ChatPage() {
   return (
     <div className="h-screen flex flex-col bg-background">

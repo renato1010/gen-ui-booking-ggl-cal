@@ -2,7 +2,7 @@ import * as chrono from 'chrono-node';
 import { differenceInMinutes } from 'date-fns';
 import { END_OF_DAY_HOUR } from './constants';
 
-type TimeInterval = { start: string; end: string };
+export type TimeInterval = { start: string; end: string };
 
 type BusyIntervals = ReadonlyArray<TimeInterval>;
 
@@ -178,4 +178,11 @@ export const testDateTime = (dayOfTheMonth?: number, hr?: number, mins?: number)
   ).padStart(2, '0')}:00-${formatHours(Math.floor(timezoneOffsetInMins / 60))}:${String(
     timezoneOffsetInMins % 60
   ).padStart(2, '0')}`;
+};
+
+export const utcStringToLocalHrMin = (utcString: string) => {
+  const date = new Date(utcString);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${formatHours(hours)}:${String(minutes).padStart(2, '0')}`;
 };

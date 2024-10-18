@@ -31,15 +31,15 @@ export default function ChatInterface() {
 
   return (
     <div className="flex flex-col h-full max-w-3xl mx-auto">
-      <ScrollArea className="flex-grow p-4 space-y-4">
+      <ScrollArea className="flex-grow p-4 space-y-6">
         {conversation.map((message, index) => (
           <div
             key={message.id || index}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`my-4 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-sm rounded-lg p-4 ${
-                message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+              className={`max-w-sm rounded-lg p-3 ${
+                message.role === 'user' ? 'bg-slate-600 text-primary-foreground' : 'bg-neutral-50'
               }`}
             >
               {message.display}

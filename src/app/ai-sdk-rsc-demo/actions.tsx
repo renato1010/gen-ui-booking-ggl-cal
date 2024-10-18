@@ -1,11 +1,13 @@
 'use server';
 
-import { createAI, getMutableAIState, streamUI } from 'ai/rsc';
 import { ReactNode } from 'react';
+import { createAI, getMutableAIState, streamUI } from 'ai/rsc';
 import { z } from 'zod';
 import { generateId } from 'ai';
 import { openai } from '@/lib/openai-model';
 import { naturalLangDateParser, utcToLocaleTimeZone } from '@/utils/time-utils';
+import { availableThirtyMinSpots } from '@/utils/google-cal-utils';
+import { DayAvailableTimes } from '@/components/day-available-times';
 
 export interface ServerMessage {
   role: 'user' | 'assistant';
@@ -48,6 +50,7 @@ export async function bookingGoogleCalendar(input: string): Promise<ClientMessag
           const startLocalTZ = utcToLocaleTimeZone(start);
           const endLocalTZ = utcToLocaleTimeZone(end);
           console.log({ timeReference, start, end, startLocalTZ, endLocalTZ });
+          const { day, free: freeSpots } = await availableThirtyMinSpots(startLocalTZ, endLocalTZ);
 
           history.done((messages: ServerMessage[]) => [
             ...messages,
@@ -57,14 +60,7 @@ export async function bookingGoogleCalendar(input: string): Promise<ClientMessag
             }
           ]);
 
-          return (
-            <div>
-              <p>Start:{start}</p>
-              <p className="text-red-800 font-bold">Start (Local Timezone):{startLocalTZ}</p>
-              <p>End:{end}</p>
-              <p className="text-red-800 font-bold">End (Local Timezone):{endLocalTZ}</p>
-            </div>
-          );
+          return <DayAvailableTimes day={day} availableTimes={freeSpots} />;
         }
       }
     }
