@@ -5,33 +5,26 @@ import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useActions, useUIState } from 'ai/rsc';
+import { AI, ClientMessage } from '@/app/ai-sdk-rsc-demo/actions';
+import { generateId } from 'ai';
 
-type Message = {
-  role: 'user' | 'assistant';
-  content: string;
-};
+// Allow streaming responses upt to 30 seconds
+export const maxDuration = 30;
 
 export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hi! I'll help you book your appointment" }
-  ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState<string>('');
+  const [conversation, setConversation] = useUIState<typeof AI>();
+  const { bookingGoogleCalendar } = useActions<typeof AI>();
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (input.trim()) {
-      setMessages([...messages, { role: 'user', content: input }]);
-      // In a real application, you would send the message to an API here
-      // and then add the response to the messages array
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content:
-              'This is a mock response. In a real application, this would be the response from an AI model.'
-          }
-        ]);
-      }, 1000);
+      setConversation((currentConversation: ClientMessage[]) => [
+        ...currentConversation,
+        { id: generateId(), role: 'user', display: input }
+      ]);
+      const message = await bookingGoogleCalendar(input);
+      setConversation((currentConversation: ClientMessage[]) => [...currentConversation, message]);
       setInput('');
     }
   };
@@ -39,9 +32,9 @@ export default function ChatInterface() {
   return (
     <div className="flex flex-col h-full max-w-3xl mx-auto">
       <ScrollArea className="flex-grow p-4 space-y-4">
-        {messages.map((message, index) => (
+        {conversation.map((message, index) => (
           <div
-            key={index}
+            key={message.id || index}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
@@ -49,7 +42,7 @@ export default function ChatInterface() {
                 message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
               }`}
             >
-              {message.content}
+              {message.display}
             </div>
           </div>
         ))}

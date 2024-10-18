@@ -14,5 +14,9 @@ declare module "sst" {
       "bastion": string
       "type": "sst.aws.Vpc"
     }
+    "OpenAISecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
   }
 }

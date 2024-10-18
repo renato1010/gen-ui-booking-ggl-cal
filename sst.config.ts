@@ -11,9 +11,10 @@ export default $config({
   async run() {
     const vpc = new sst.aws.Vpc('MyVpc', { bastion: true });
     const cluster = new sst.aws.Cluster('MyCluster', { vpc });
+    const openAISecret = new sst.Secret('OpenAISecret');
 
     cluster.addService('MyService', {
-      link: [],
+      link: [openAISecret],
       public: {
         ports: [{ listen: '80/http', forward: '3000/http' }]
       },

@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import ChatInterface from '@/components/chat-interface';
 
 export default function ChatPage() {
   return (
@@ -11,10 +10,8 @@ export default function ChatPage() {
           </h1>
         </div>
       </header>
-      <main className="h-screen grid place-content-center ">
-        <Button asChild variant="link">
-          <Link href="/ai-sdk-rsc-demo">AI SDK RSC Demo</Link>
-        </Button>
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <ChatInterface />
       </main>
     </div>
   );
