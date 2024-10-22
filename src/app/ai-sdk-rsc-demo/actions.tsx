@@ -8,6 +8,7 @@ import { openai } from '@/lib/openai-model';
 import { naturalLangDateParser, utcToLocaleTimeZone } from '@/utils/time-utils';
 import { availableThirtyMinSpots, createEvent } from '@/utils/google-cal-utils';
 import { DayAvailableTimes } from '@/components/day-available-times';
+import { AvailableTimesSkeleton } from '@/components/day-available-time.skeleton';
 
 export interface ServerMessage {
   role: 'user' | 'assistant';
@@ -25,6 +26,8 @@ export async function bookingGoogleCalendar(input: string): Promise<ClientMessag
 
   const result = await streamUI({
     model: openai(),
+    system:
+      "You're a friendly booking agent, and your goal is to help users lock in appointments that work best for them.",
     messages: [...history.get(), { role: 'user', content: input }],
     text: ({ content, done }) => {
       if (done) {
@@ -43,11 +46,11 @@ export async function bookingGoogleCalendar(input: string): Promise<ClientMessag
             Text always must be in English.
             `)
         }),
-        generate: async ({ timeReference }) => {
+        generate: async function* ({ timeReference }) {
+          yield <AvailableTimesSkeleton />;
           const { startDateTime: start, endDateTime: end } = naturalLangDateParser(timeReference);
           const startLocalTZ = utcToLocaleTimeZone(start);
           const endLocalTZ = utcToLocaleTimeZone(end);
-          console.log({ startLocalTZ, endLocalTZ });
           const { day, free: freeSpots } = await availableThirtyMinSpots(startLocalTZ, endLocalTZ);
 
           history.done((messages: ServerMessage[]) => [
@@ -101,9 +104,13 @@ export const AI = createAI<
   initialAIState: [],
   initialUIState: [
     {
-      id: '0',
+      id: generateId(),
       role: 'assistant',
-      display: 'Hi, I can help you booking an appointment, so when is a good time for you?'
+      display: (
+        <div className="max-w-sm rounded-lg p-3 bg-slate-600 text-primary-foreground">
+          I&apos;m your friendly booking Agent, will help you lock in your appointment
+        </div>
+      )
     }
   ]
 });

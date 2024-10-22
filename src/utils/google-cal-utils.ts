@@ -1,7 +1,7 @@
 'use server';
 
 import { google } from 'googleapis';
-import { DEFAULT_TIME_ZONE, GOOGLE_CAL_DEFAULT_ATTENDEE } from '@/utils/constants';
+import { DEFAULT_TIME_ZONE, GOOGLE_CAL_DEFAULT_ATTENDEE_EMAIL } from '@/utils/constants';
 import { getListOfFreeSpots } from '@/utils/time-utils';
 import { auth } from '@/utils/google-cal-auth';
 
@@ -27,7 +27,7 @@ export async function createEvent(startTime: string, endTime: string) {
     const res = await calendar.events.insert({
       calendarId: 'primary',
       requestBody: {
-        summary: 'Test event',
+        summary: 'DEMO BOOKING EVENT',
         location: 'Guatemala',
         description: 'This is a test event',
         start: {
@@ -36,7 +36,7 @@ export async function createEvent(startTime: string, endTime: string) {
         end: {
           dateTime: endTime
         },
-        attendees: [{ email: GOOGLE_CAL_DEFAULT_ATTENDEE }]
+        attendees: [{ email: GOOGLE_CAL_DEFAULT_ATTENDEE_EMAIL }]
       }
     });
     return res.data;
