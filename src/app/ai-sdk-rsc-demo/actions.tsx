@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { generateId } from 'ai';
 import { openai } from '@/lib/openai-model';
 import { naturalLangDateParser, utcToLocaleTimeZone } from '@/utils/time-utils';
-import { availableThirtyMinSpots } from '@/utils/google-cal-utils';
+import { availableThirtyMinSpots, createEvent } from '@/utils/google-cal-utils';
 import { DayAvailableTimes } from '@/components/day-available-times';
 
 export interface ServerMessage {
@@ -21,8 +21,6 @@ export interface ClientMessage {
 }
 
 export async function bookingGoogleCalendar(input: string): Promise<ClientMessage> {
-  'use server';
-
   const history = getMutableAIState();
 
   const result = await streamUI({
@@ -49,7 +47,7 @@ export async function bookingGoogleCalendar(input: string): Promise<ClientMessag
           const { startDateTime: start, endDateTime: end } = naturalLangDateParser(timeReference);
           const startLocalTZ = utcToLocaleTimeZone(start);
           const endLocalTZ = utcToLocaleTimeZone(end);
-          console.log({ timeReference, start, end, startLocalTZ, endLocalTZ });
+          console.log({ startLocalTZ, endLocalTZ });
           const { day, free: freeSpots } = await availableThirtyMinSpots(startLocalTZ, endLocalTZ);
 
           history.done((messages: ServerMessage[]) => [
@@ -71,6 +69,25 @@ export async function bookingGoogleCalendar(input: string): Promise<ClientMessag
     role: 'assistant',
     display: result.value
   };
+}
+
+export async function createGoogleCalEvent(startTime: string, endTime: string) {
+  // create google calendar event with defaults
+  try {
+    const newEvent = await createEvent(startTime, endTime);
+    const { creator } = newEvent;
+    if (typeof creator?.email === 'undefined') {
+      return {
+        error: 'Error creating event'
+      };
+    }
+    const { email } = creator;
+    return { email };
+  } catch (error) {
+    return {
+      error: `Error creating event: ${error}`
+    };
+  }
 }
 
 export const AI = createAI<
