@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-
-
-export default function ChatPage() {
+export default function HomePage() {
   return (
     <div className="h-screen flex flex-col bg-background">
       <header className="border-b">
@@ -16,6 +14,9 @@ export default function ChatPage() {
       <main className="h-screen grid place-content-center ">
         <Button asChild variant="link">
           <Link href="/ai-sdk-rsc-demo">AI SDK RSC Demo</Link>
+        </Button>
+        <Button asChild variant="link">
+          <Link href="/ai-sdk-ui-demo">AI SDK UI Demo</Link>
         </Button>
       </main>
     </div>

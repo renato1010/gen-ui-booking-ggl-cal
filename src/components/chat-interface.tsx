@@ -12,7 +12,7 @@ import { generateId } from 'ai';
 // Allow streaming responses upt to 30 seconds
 export const maxDuration = 30;
 
-export default function ChatInterface() {
+export function ChatInterfaceRSC() {
   const [input, setInput] = useState<string>('');
   const [conversation, setConversation] = useUIState<typeof AI>();
   const { bookingGoogleCalendar } = useActions<typeof AI>();

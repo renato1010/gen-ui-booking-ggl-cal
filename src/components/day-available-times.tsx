@@ -9,7 +9,7 @@ import clsx from 'clsx';
 import { createGoogleCalEvent } from '@/app/ai-sdk-rsc-demo/actions';
 import { useToast } from '@/hooks/use-toast';
 
-type DayAvailableTimesProps = {
+export type DayAvailableTimesProps = {
   day: string;
   availableTimes: ReadonlyArray<TimeInterval>;
 };

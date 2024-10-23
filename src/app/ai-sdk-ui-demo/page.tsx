@@ -1,6 +1,11 @@
-import { ChatInterfaceRSC } from '@/components/chat-interface';
+'use client';
 
-export default function ChatPageRSC() {
+import { ChatInterfaceUI } from '@/components/chat-interface-ui';
+
+// Allow streaming responses upt to 30 seconds
+export const maxDuration = 30;
+
+export default function ChatPageUI() {
   return (
     <div className="h-screen flex flex-col bg-background">
       <header className="border-b">
@@ -11,7 +16,7 @@ export default function ChatPageRSC() {
         </div>
       </header>
       <main className="flex-1 container mx-auto px-4 py-8">
-        <ChatInterfaceRSC />
+        <ChatInterfaceUI />
       </main>
     </div>
   );
