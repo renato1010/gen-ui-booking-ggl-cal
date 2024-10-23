@@ -1,5 +1,6 @@
 'use client';
 
+import { generateId, type Message } from 'ai';
 import { useChat } from 'ai/react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,8 +9,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { DayAvailableTimes } from './day-available-times';
 import { AvailableTimesSkeleton } from './day-available-time.skeleton';
 
+const initialMessages: Message[] = [
+  {
+    id: generateId(),
+    role: 'user',
+    content: "I'm your friendly booking Agent, will help you lock in your appointment"
+  }
+];
 export function ChatInterfaceUI() {
-  const { messages, input, setInput, handleSubmit } = useChat();
+  const { messages, input, setInput, handleSubmit } = useChat({
+    initialMessages
+  });
   return (
     <div className="flex flex-col h-full max-w-3xl mx-auto">
       <ScrollArea className="flex-grow p-4 space-y-6">
