@@ -16,9 +16,10 @@ const initialMessages: Message[] = [
     content: "I'm your friendly booking Agent, will help you lock in your appointment"
   }
 ];
-export function ChatInterfaceUI() {
+export function ChatInterfaceUI({ api = '/api/chat' }: { api?: string }) {
   const { messages, input, setInput, handleSubmit } = useChat({
-    initialMessages
+    initialMessages,
+    api
   });
   return (
     <div className="flex flex-col h-full max-w-3xl mx-auto">

@@ -1,16 +1,21 @@
 import { convertToCoreMessages, streamText } from 'ai';
 import { z } from 'zod';
 import { openai } from '@/lib/openai-model';
-import { naturalLangDateParser, utcToLocaleTimeZone } from '@/utils/time-utils';
+import {
+  getLocalDateTimeString,
+} from '@/utils/time-utils';
 import { availableThirtyMinSpots } from '@/utils/google-cal-utils';
+import { extractDateTimeInterval } from '@/utils/langchain-chains';
 
 export async function POST(request: Request) {
   const { messages } = await request.json();
   const coreMessages = convertToCoreMessages(messages);
   const result = await streamText({
     model: openai(),
-    system:
-      "You're a friendly booking agent, and your goal is to help users lock in appointments that work best for them.",
+    system: `
+      You're a friendly booking agent, and your goal is to help users lock in appointments that work best for them. 
+      Your task is extract any date-time reference from user input and pass it to the available tools.
+      `,
     messages: coreMessages,
     tools: {
       showBookingOptions: {
@@ -24,9 +29,16 @@ export async function POST(request: Request) {
         }),
         required: ['timeReference'],
         execute: async function ({ timeReference }) {
-          const { startDateTime: start, endDateTime: end } = naturalLangDateParser(timeReference);
-          const startLocalTZ = utcToLocaleTimeZone(start);
-          const endLocalTZ = utcToLocaleTimeZone(end);
+          const { start, end } = await extractDateTimeInterval(timeReference);
+          if (start === null) {
+            throw new Error("Couldn't extract date-time interval");
+          }
+          // extractDateTimeInterval returns local times
+          const startLocalTZ = getLocalDateTimeString(start, 'start');
+          const endLocalTZ =
+            typeof end === 'string'
+              ? getLocalDateTimeString(end, 'end')
+              : getLocalDateTimeString(start, 'end');
           const { day, free: availableTimes } = await availableThirtyMinSpots(
             startLocalTZ,
             endLocalTZ

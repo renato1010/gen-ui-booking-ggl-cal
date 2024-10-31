@@ -18,6 +18,9 @@ export default function HomePage() {
         <Button asChild variant="link">
           <Link href="/ai-sdk-ui-demo">AI SDK UI Demo</Link>
         </Button>
+        <Button asChild variant="link">
+          <Link href="/ai-sdk-cot-prompt">AI SDK UI Demo(Prompt Eng)</Link>
+        </Button>
       </main>
     </div>
   );

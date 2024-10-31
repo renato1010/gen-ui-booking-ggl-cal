@@ -26,7 +26,6 @@ export const DayAvailableTimes = ({ day, availableTimes }: DayAvailableTimesProp
         utcToLocaleTimeZone(time.start),
         utcToLocaleTimeZone(time.end)
       );
-      console.log({ email, error });
       if (error) {
         toast({
           title: 'Booking Error',

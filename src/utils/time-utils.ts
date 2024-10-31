@@ -1,6 +1,6 @@
 import * as chrono from 'chrono-node';
 import { differenceInMinutes } from 'date-fns';
-import { END_OF_DAY_HOUR } from './constants';
+import { END_OF_DAY_HOUR, START_OF_DAY_HOUR } from './constants';
 
 export type TimeInterval = { start: string; end: string };
 
@@ -29,17 +29,17 @@ export const utcToLocaleTimeZone = (dateString: string): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
 };
 
-function getEndOfDay({
+export function getEndOfDay({
   date,
   endTime,
   isoString
 }: {
   date: Date;
-  endTime: string | undefined;
-  isoString: true;
+  endTime?: string;
+  isoString?: true;
 }): string;
-function getEndOfDay({ date }: { date: Date; endTime: string | undefined }): string;
-function getEndOfDay({
+// export function getEndOfDay({ date }: { date: Date; endTime: string | undefined }): string;
+export function getEndOfDay({
   date,
   endTime,
   isoString
@@ -48,7 +48,7 @@ function getEndOfDay({
   endTime: string;
   isoString: false;
 }): Date;
-function getEndOfDay({
+export function getEndOfDay({
   date,
   endTime,
   isoString = true
@@ -61,9 +61,59 @@ function getEndOfDay({
     const [endHour, endMinute] = endTime.split(':').map(Number);
     date.setHours(endHour, endMinute, 59, 999);
   } else {
-    date.setHours(END_OF_DAY_HOUR, 0, 0, 0);
+    const endHours = date.getHours();
+    if (endHours < END_OF_DAY_HOUR) {
+      date.setHours(endHours, 0, 0, 0);
+    } else {
+      date.setHours(END_OF_DAY_HOUR, 0, 0, 0);
+    }
   }
   return isoString ? date.toISOString() : date;
+}
+
+export function getStartOfDay({
+  date,
+  startTime,
+  isoString
+}: {
+  date: Date;
+  startTime?: string;
+  isoString?: boolean;
+}): string;
+export function getStartOfDay({
+  date,
+  startTime,
+  isoString
+}: {
+  date: Date;
+  startTime: string;
+  isoString: false;
+}): Date;
+export function getStartOfDay({
+  date,
+  startTime,
+  isoString = true
+}: {
+  date: Date;
+  startTime?: string;
+  isoString?: boolean;
+}) {
+  if (startTime) {
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    date.setHours(startHour, startMinute, 0, 0);
+  } else {
+    const startHour = date.getHours();
+    if (startHour < START_OF_DAY_HOUR) {
+      // START_OF_DAY_HOUR is supposed to  be in local time
+      date.setHours(START_OF_DAY_HOUR, 0, 0, 0);
+    }
+  }
+  return isoString ? date.toISOString() : date;
+}
+export function getLocalDateTimeString(dateTimeString: string, startOrEnd: 'start' | 'end') {
+  return startOrEnd === 'start'
+    ? utcToLocaleTimeZone(getStartOfDay({ date: new Date(dateTimeString) }))
+    : utcToLocaleTimeZone(getEndOfDay({ date: new Date(dateTimeString) }));
 }
 // relative date(natural language)
 export const naturalLangDateParser = (userInputRelativeDate: string) => {
@@ -73,7 +123,6 @@ export const naturalLangDateParser = (userInputRelativeDate: string) => {
   });
   const { start, end } = parse[0];
   const parseDate = parse[0].date();
-  // console.log({ parse: JSON.stringify(parse, null, 2), start, end });
   const startDateTime = new Date(
     start.get('year') ?? parseDate.getUTCFullYear(),
     (start.get('month') ?? parseDate.getUTCMonth()) - 1,

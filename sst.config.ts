@@ -13,9 +13,10 @@ export default $config({
     const cluster = new sst.aws.Cluster('MyCluster', { vpc });
     const openAISecret = new sst.Secret('OpenAISecret');
     const googleCalServiceAccJson = new sst.Secret('GoogleCalServiceAccJson');
+    const anthropicSecret = new sst.Secret('AnthropicSecret');
 
     cluster.addService('MyService', {
-      link: [openAISecret, googleCalServiceAccJson],
+      link: [openAISecret, googleCalServiceAccJson, anthropicSecret],
       public: {
         ports: [{ listen: '80/http', forward: '3000/http' }]
       },
