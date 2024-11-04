@@ -1,6 +1,11 @@
 import * as chrono from 'chrono-node';
-import { differenceInMinutes } from 'date-fns';
-import { END_OF_DAY_HOUR, START_OF_DAY_HOUR } from './constants';
+import { differenceInMinutes, addHours, sub, isWithinInterval } from 'date-fns';
+import {
+  DEFAULT_TIME_INTERVAL_IN_HOURS,
+  END_OF_DAY_HOUR,
+  START_OF_DAY_HOUR,
+  DEFAULT_TIME_SPOT_SPAN_IN_MINS
+} from '@/utils/constants';
 
 export type TimeInterval = { start: string; end: string };
 
@@ -8,6 +13,40 @@ type BusyIntervals = ReadonlyArray<TimeInterval>;
 
 type FreeIntervals = { day: string; free: ReadonlyArray<TimeInterval> };
 
+export function setIntervalHours(
+  dateTimeString: string,
+  hours: number = DEFAULT_TIME_INTERVAL_IN_HOURS
+): string {
+  const date = new Date(dateTimeString);
+  return addHours(date, hours).toISOString();
+}
+export function isDateInUTC(date: Date): boolean {
+  // Get the UTC and local time components of the date
+  const utcYear = date.getUTCFullYear();
+  const utcMonth = date.getUTCMonth();
+  const utcDate = date.getUTCDate();
+  const utcHours = date.getUTCHours();
+  const utcMinutes = date.getUTCMinutes();
+  const utcSeconds = date.getUTCSeconds();
+
+  // Get the local time components
+  const localYear = date.getFullYear();
+  const localMonth = date.getMonth();
+  const localDate = date.getDate();
+  const localHours = date.getHours();
+  const localMinutes = date.getMinutes();
+  const localSeconds = date.getSeconds();
+
+  // Compare if the local time components match the UTC components
+  return (
+    utcYear === localYear &&
+    utcMonth === localMonth &&
+    utcDate === localDate &&
+    utcHours === localHours &&
+    utcMinutes === localMinutes &&
+    utcSeconds === localSeconds
+  );
+}
 export const utcToLocaleTimeZone = (dateString: string): string => {
   const date = new Date(dateString);
   const offsetMinutes = date.getTimezoneOffset();
@@ -28,88 +67,64 @@ export const utcToLocaleTimeZone = (dateString: string): string => {
   // Construct the final date string
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
 };
-
-export function getEndOfDay({
-  date,
-  endTime,
-  isoString
-}: {
-  date: Date;
-  endTime?: string;
-  isoString?: true;
-}): string;
-// export function getEndOfDay({ date }: { date: Date; endTime: string | undefined }): string;
-export function getEndOfDay({
-  date,
-  endTime,
-  isoString
-}: {
-  date: Date;
-  endTime: string;
-  isoString: false;
-}): Date;
-export function getEndOfDay({
-  date,
-  endTime,
-  isoString = true
-}: {
-  date: Date;
-  endTime?: string;
-  isoString?: boolean;
-}) {
-  if (endTime) {
-    const [endHour, endMinute] = endTime.split(':').map(Number);
-    date.setHours(endHour, endMinute, 59, 999);
-  } else {
-    const endHours = date.getHours();
-    if (endHours < END_OF_DAY_HOUR) {
-      date.setHours(endHours, 0, 0, 0);
-    } else {
-      date.setHours(END_OF_DAY_HOUR, 0, 0, 0);
-    }
+function defaultEndOfDayStr(date: Date) {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    END_OF_DAY_HOUR,
+    0,
+    0,
+    0
+  ).toISOString();
+}
+function defaultStartOfDayStr(date: Date) {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    START_OF_DAY_HOUR,
+    0,
+    0,
+    0
+  ).toISOString();
+}
+export function getEndOfDay({ date }: { date: Date }) {
+  // work with date as UTC
+  const isUTC = isDateInUTC(date);
+  if (!isUTC) {
+    // work with utc date
+    date = new Date(date.toISOString());
   }
-  return isoString ? date.toISOString() : date;
+  const defaultEndOfDayDate = new Date(defaultEndOfDayStr(date));
+  const defaultStartOfDayDate = new Date(defaultStartOfDayStr(date));
+  const isInInterval = isWithinInterval(date, {
+    start: defaultStartOfDayDate,
+    end: defaultEndOfDayDate
+  });
+  return isInInterval ? date.toISOString() : defaultEndOfDayDate.toISOString();
 }
 
-export function getStartOfDay({
-  date,
-  startTime,
-  isoString
-}: {
-  date: Date;
-  startTime?: string;
-  isoString?: boolean;
-}): string;
-export function getStartOfDay({
-  date,
-  startTime,
-  isoString
-}: {
-  date: Date;
-  startTime: string;
-  isoString: false;
-}): Date;
-export function getStartOfDay({
-  date,
-  startTime,
-  isoString = true
-}: {
-  date: Date;
-  startTime?: string;
-  isoString?: boolean;
-}) {
-  if (startTime) {
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    date.setHours(startHour, startMinute, 0, 0);
-  } else {
-    const startHour = date.getHours();
-    if (startHour < START_OF_DAY_HOUR) {
-      // START_OF_DAY_HOUR is supposed to  be in local time
-      date.setHours(START_OF_DAY_HOUR, 0, 0, 0);
-    }
+export function getStartOfDay({ date }: { date: Date }) {
+  // work with date as UTC
+  const isUTC = isDateInUTC(date);
+  if (!isUTC) {
+    // work with utc date
+    date = new Date(date.toISOString());
   }
-  return isoString ? date.toISOString() : date;
+  const defaultStartOfDayDate = new Date(defaultStartOfDayStr(date));
+  const defaultEndOfDayDate = new Date(defaultEndOfDayStr(date));
+  // the latest time for a booking is the defaultEndOfDayDate minus the
+  // default time spot span(30 min)
+  const serviceEndOfDayDate = sub(defaultEndOfDayDate, { minutes: DEFAULT_TIME_SPOT_SPAN_IN_MINS });
+  // interval of service is from defaultStartOfDayDate to serviceEndOfDayDate
+  const isInInterval = isWithinInterval(date, {
+    start: defaultStartOfDayDate,
+    end: serviceEndOfDayDate
+  });
+  return isInInterval ? date.toISOString() : defaultStartOfDayDate.toISOString();
 }
+
 export function getLocalDateTimeString(dateTimeString: string, startOrEnd: 'start' | 'end') {
   return startOrEnd === 'start'
     ? utcToLocaleTimeZone(getStartOfDay({ date: new Date(dateTimeString) }))
@@ -130,12 +145,9 @@ export const naturalLangDateParser = (userInputRelativeDate: string) => {
     start.isCertain('hour') === true ? (start.get('hour') as number) : 6
   ).toISOString();
 
-  let endDateString: string;
+  let endDateString: string | null;
   if (!end) {
-    endDateString = getEndOfDay({
-      date: new Date(startDateTime),
-      endTime: undefined
-    });
+    endDateString = null;
   } else {
     endDateString = new Date(
       end.get('year') ?? parseDate.getUTCFullYear(),
@@ -144,7 +156,7 @@ export const naturalLangDateParser = (userInputRelativeDate: string) => {
       end?.isCertain('hour') === true ? (end.get('hour') as number) : 23
     ).toISOString();
   }
-  const endDateTime = new Date(endDateString).toISOString();
+  const endDateTime = endDateString ? new Date(endDateString).toISOString() : null;
 
   return { startDateTime, endDateTime };
 };
@@ -235,3 +247,5 @@ export const utcStringToLocalHrMin = (utcString: string) => {
   const minutes = date.getMinutes();
   return `${formatHours(hours)}:${String(minutes).padStart(2, '0')}`;
 };
+
+

@@ -5,7 +5,11 @@ import { createAI, getMutableAIState, streamUI } from 'ai/rsc';
 import { z } from 'zod';
 import { generateId } from 'ai';
 import { openai } from '@/lib/openai-model';
-import { naturalLangDateParser, utcToLocaleTimeZone } from '@/utils/time-utils';
+import {
+  getLocalDateTimeString,
+  naturalLangDateParser,
+  setIntervalHours
+} from '@/utils/time-utils';
 import { availableThirtyMinSpots, createEvent } from '@/utils/google-cal-utils';
 import { DayAvailableTimes } from '@/components/day-available-times';
 import { AvailableTimesSkeleton } from '@/components/day-available-time.skeleton';
@@ -49,8 +53,15 @@ export async function bookingGoogleCalendar(input: string): Promise<ClientMessag
         generate: async function* ({ timeReference }) {
           yield <AvailableTimesSkeleton />;
           const { startDateTime: start, endDateTime: end } = naturalLangDateParser(timeReference);
-          const startLocalTZ = utcToLocaleTimeZone(start);
-          const endLocalTZ = utcToLocaleTimeZone(end);
+          if (start == null) {
+            throw new Error("Couldn't extract date-time interval");
+          }
+          // use custom function to manipulate the start/end datetimes
+          const startLocalTZ = getLocalDateTimeString(start, 'start');
+          const endLocalTZ = !!end
+            ? getLocalDateTimeString(end, 'end')
+            : getLocalDateTimeString(setIntervalHours(start), 'end');
+          console.log({ startLocalTZ, endLocalTZ });
           const { day, free: freeSpots } = await availableThirtyMinSpots(startLocalTZ, endLocalTZ);
 
           history.done((messages: ServerMessage[]) => [

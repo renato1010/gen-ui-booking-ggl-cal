@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DayAvailableTimes } from './day-available-times';
 import { AvailableTimesSkeleton } from './day-available-time.skeleton';
+import ErrorCard from './error-card';
 
 const initialMessages: Message[] = [
   {
@@ -17,7 +18,7 @@ const initialMessages: Message[] = [
   }
 ];
 export function ChatInterfaceUI({ api = '/api/chat' }: { api?: string }) {
-  const { messages, input, setInput, handleSubmit } = useChat({
+  const { messages, input, setInput, handleSubmit, error, reload } = useChat({
     initialMessages,
     api
   });
@@ -57,6 +58,7 @@ export function ChatInterfaceUI({ api = '/api/chat' }: { api?: string }) {
             </div>
           </div>
         ))}
+        {error && <ErrorCard reload={reload} />}
       </ScrollArea>
       <div className="p-4 border-t">
         <form onSubmit={handleSubmit} className="flex space-x-2">

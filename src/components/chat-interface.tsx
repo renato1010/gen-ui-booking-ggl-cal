@@ -8,6 +8,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useActions, useUIState } from 'ai/rsc';
 import { AI, ClientMessage } from '@/app/ai-sdk-rsc-demo/actions';
 import { generateId } from 'ai';
+import ErrorBoundary from '@/components/error-boundary';
+import ErrorCard from './error-card';
 
 // Allow streaming responses upt to 30 seconds
 export const maxDuration = 30;
@@ -37,13 +39,15 @@ export function ChatInterfaceRSC() {
             key={message.id || index}
             className={`my-4 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div
-              className={`max-w-sm rounded-lg p-3 ${
-                message.role === 'user' ? 'bg-slate-600 text-primary-foreground' : 'bg-neutral-50'
-              }`}
-            >
-              {message.display}
-            </div>
+            <ErrorBoundary fallback={<ErrorCard />}>
+              <div
+                className={`max-w-sm rounded-lg p-3 ${
+                  message.role === 'user' ? 'bg-slate-600 text-primary-foreground' : 'bg-neutral-50'
+                }`}
+              >
+                {message.display}
+              </div>
+            </ErrorBoundary>
           </div>
         ))}
       </ScrollArea>

@@ -1,12 +1,11 @@
 import { convertToCoreMessages, streamText } from 'ai';
 import { z } from 'zod';
 import { openai } from '@/lib/openai-model';
-import {
-  getLocalDateTimeString,
-} from '@/utils/time-utils';
+import { getLocalDateTimeString, setIntervalHours } from '@/utils/time-utils';
 import { availableThirtyMinSpots } from '@/utils/google-cal-utils';
 import { extractDateTimeInterval } from '@/utils/langchain-chains';
 
+export const maxDuration = 30;
 export async function POST(request: Request) {
   const { messages } = await request.json();
   const coreMessages = convertToCoreMessages(messages);
@@ -29,16 +28,20 @@ export async function POST(request: Request) {
         }),
         required: ['timeReference'],
         execute: async function ({ timeReference }) {
+          if (!timeReference) {
+            throw new Error('No date-time reference provided');
+          }
           const { start, end } = await extractDateTimeInterval(timeReference);
+          console.log({ start, timeReference });
           if (start === null) {
             throw new Error("Couldn't extract date-time interval");
           }
-          // extractDateTimeInterval returns local times
+          // use custom function to manipulate the start/end datetimes
           const startLocalTZ = getLocalDateTimeString(start, 'start');
-          const endLocalTZ =
-            typeof end === 'string'
-              ? getLocalDateTimeString(end, 'end')
-              : getLocalDateTimeString(start, 'end');
+          const endLocalTZ = !!end
+            ? getLocalDateTimeString(end, 'end')
+            : getLocalDateTimeString(setIntervalHours(start), 'end');
+          console.log({ startLocalTZ, endLocalTZ });
           const { day, free: availableTimes } = await availableThirtyMinSpots(
             startLocalTZ,
             endLocalTZ

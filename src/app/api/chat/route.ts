@@ -1,16 +1,23 @@
 import { convertToCoreMessages, streamText } from 'ai';
 import { z } from 'zod';
 import { openai } from '@/lib/openai-model';
-import { naturalLangDateParser, utcToLocaleTimeZone } from '@/utils/time-utils';
+import {
+  getLocalDateTimeString,
+  naturalLangDateParser,
+  setIntervalHours
+} from '@/utils/time-utils';
 import { availableThirtyMinSpots } from '@/utils/google-cal-utils';
 
+export const maxDuration = 30;
 export async function POST(request: Request) {
   const { messages } = await request.json();
   const coreMessages = convertToCoreMessages(messages);
   const result = await streamText({
     model: openai(),
-    system:
-      "You're a friendly booking agent, and your goal is to help users lock in appointments that work best for them.",
+    system: `
+      You're a friendly booking agent, and your goal is to help users lock in appointments that work best for them. 
+      Your task is extract any date-time reference from user input and pass it to the available tools.
+      `,
     messages: coreMessages,
     tools: {
       showBookingOptions: {
@@ -24,9 +31,16 @@ export async function POST(request: Request) {
         }),
         required: ['timeReference'],
         execute: async function ({ timeReference }) {
+          if (!timeReference) {
+            throw new Error('No date-time reference provided');
+          }
           const { startDateTime: start, endDateTime: end } = naturalLangDateParser(timeReference);
-          const startLocalTZ = utcToLocaleTimeZone(start);
-          const endLocalTZ = utcToLocaleTimeZone(end);
+          // use custom function to manipulate the start/end datetimes
+          const startLocalTZ = getLocalDateTimeString(start, 'start');
+          const endLocalTZ = !!end
+            ? getLocalDateTimeString(end, 'end')
+            : getLocalDateTimeString(setIntervalHours(start), 'end');
+          console.log({ startLocalTZ, endLocalTZ });
           const { day, free: availableTimes } = await availableThirtyMinSpots(
             startLocalTZ,
             endLocalTZ
