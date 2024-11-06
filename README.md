@@ -33,7 +33,7 @@ I chose SST primarily for its streamlined management of [secrets](https://sst.de
 
 ## Generative UI with Vercel's [AI SDK RSC](https://sdk.vercel.ai/docs/ai-sdk-rsc/overview)
 
-Vercel's AI SDK RSC package, released recently, caught my attention as a Next.js developer. This project demonstrates a use case where an LLM, when equipped with a custom tool, can render a response as a React Server Component instead of plain text. Here’s some context from [Vercel's documentation](https://sdk.vercel.ai/docs/ai-sdk-rsc/overview):
+Vercel's AI SDK RSC package, released earlier this year, caught my attention as a Next.js developer. This project demonstrates a use case where an LLM, when equipped with a custom tool, can render a response as a React Server Component instead of plain text. Here’s some context from [Vercel's documentation](https://sdk.vercel.ai/docs/ai-sdk-rsc/overview):
 
 > React Server Components (RSC) enable UI rendering on the server, streaming to the client. They introduce Server Actions, allowing server-side function calls from the client with end-to-end type safety. This opens new possibilities for AI applications, where an LLM can generate and stream UI components directly from the server to the client.
 
